@@ -1,0 +1,53 @@
+---
+- name: Configure EC2 instance to show subnet_id
+  hosts: ec2_instances
+  gather_facts: no
+  become: yes 
+  tasks:
+    - name: Update packages
+      dnf:
+        name: '*'
+        state: latest
+
+    - name: Install httpd
+      dnf:
+        name: httpd
+        state: present
+
+    - name: Start httpd service
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Configure Apache to listen on port 80
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: 'Listen 80'
+      notify: Restart Apache
+
+    - name: Get AWS metadata token
+      command: "curl -s -X PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600'"
+      register: token_output
+
+    - name: Get network interfaces information
+      command: "curl -s -H 'X-aws-ec2-metadata-token: {{ token_output.stdout }}' http://169.254.169.254/latest/meta-data/network/interfaces/macs/"
+      register: interface_output
+
+    - name: Get subnet ID
+      command: "curl -s -H 'X-aws-ec2-metadata-token: {{ token_output.stdout }}' http://169.254.169.254/latest/meta-data/network/interfaces/macs/{{ interface_output.stdout }}/subnet-id"
+      register: subnet_output
+
+    - name: Create index.txt file
+      copy:
+        content: "<center><h1>This instance is in the subnet with ID: {{ subnet_output.stdout }} </h1></center>"
+        dest: /var/www/html/index.txt
+
+    - name: Create index.html file
+      shell: sed "s/SUBNETID/{{ subnet_output.stdout }}/" /var/www/html/index.txt > /var/www/html/index.html
+
+  handlers:
+    - name: Restart Apache
+      systemd:
+        name: httpd
+        state: restarted

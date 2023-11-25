@@ -1,0 +1,7 @@
+region: "eu-central-1"
+availability_zone: "eu-central-1a"
+instance_type: "t2.micro"
+instance_name: "Test_instance"
+image_id: "ami-0669b163befffbdfc"
+key_pair: "aws_ssh"
+sg_name: "ec2_sg"

@@ -1,0 +1,59 @@
+- name: Start EC2 instance
+  hosts: localhost
+  gather_facts: false
+  vars_files: 
+    - variables/variables.ansible.yaml
+    - variables/credentials.ansible.yaml
+  tasks:
+    - name: Create Key-pair
+      amazon.aws.ec2_key:
+        name: "{{key_pair}}"
+        region: "{{region}}"
+        aws_access_key: "{{AWS_ACCESS_KEY_ID}}"
+        aws_secret_key: "{{AWS_SECRET_ACCESS_KEY}}"
+        key_material: "{{item}}"
+      with_file: "/path/to/your/.pub file"
+      
+    - name: Create Security Group
+      amazon.aws.ec2_security_group:
+        name: "{{sg_name}}"
+        region: "{{region}}"
+        aws_access_key: "{{AWS_ACCESS_KEY_ID}}"
+        aws_secret_key: "{{AWS_SECRET_ACCESS_KEY}}"
+        rules:
+          - proto: tcp
+            ports:
+              - 22
+              - 80
+            cidr_ip:
+              - 0.0.0.0/0
+        description: Allow SSH and HTTP ports
+        
+    - name: Launch EC2 instance
+      amazon.aws.ec2_instance:
+        aws_access_key_id: "{{AWS_ACCESS_KEY_ID}}"
+        aws_secret_access_key: "{{AWS_SECRET_ACCESS_KEY}}"
+        region: "{{region}}"
+        availability_zone: "{{availability_zone}}"
+        name: "{{instance_name}}"
+        instance_type: "{{instance_type}}"
+        security_group: "{{sg_name}}"
+        exact_count: 1
+        key_name: "{{key_pair}}" 
+        image_id: "{{image_id}}"
+        wait: yes 
+        state: running
+        tags:
+          env: dev
+        network:
+          assign_public_ip: yes
+      register: ec2
+
+    - name: "Print EC2 Public IP"
+      ansible.builtin.debug:
+        msg: "Public ip for ec2 instance is {{ec2.instances[0].public_ip_address}}"
+
+
+      
+
+

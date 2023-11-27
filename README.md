@@ -23,7 +23,7 @@ Follow these steps to use the project effectively:
 
 1. **Generate AWS Access Keys:**
    - Add the keys to `variables/credentials.ansible.yaml`.
-   
+
 2. **Generate SSH Keys:**
    ```bash
    ssh-keygen -t rsa -b 4096 -f /path/to/your/keys
@@ -37,7 +37,7 @@ Follow these steps to use the project effectively:
 ansible-playbook EC2-Provision.ansible.yaml
 ```
 
-4. **Add EC2 Public IP Address to `inventory` file
+4. **Add EC2 Public IP Address to `inventory` file**
     - Add the generated EC2 Public IP Address to the `inventory` hosts file at `ansible_host` variable.
 
 5. **Run the `EC2-Configure` playbook** 
